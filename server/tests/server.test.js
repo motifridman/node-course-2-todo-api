@@ -169,7 +169,7 @@ describe('GET /users/me', () => {
       .get('/users/me')
       .set('x-auth', users[0].tokens[0].token)
       .expect(200)
-      .expect((res) =>{
+      .expect((res) => {
         expect(res.body._id).toBe(users[0]._id.toHexString());
         expect(res.body.email).toBe(users[0].email);
       })
@@ -178,12 +178,12 @@ describe('GET /users/me', () => {
 
   it('should return 401 if not autenticated', (done) => {
     request(app)
-    .get('/users/me')
-    .expect(401)
-    .expect((res) => {
-      expect(res.body).toEqual({});
-    })
-    .end(done);
+      .get('/users/me')
+      .expect(401)
+      .expect((res) => {
+        expect(res.body).toEqual({});
+      })
+      .end(done);
   });
 });
 
@@ -194,7 +194,7 @@ describe('POST /users', () => {
 
     request(app)
       .post('/users')
-      .send({email, password})
+      .send({ email, password })
       .expect(200)
       .expect((res) => {
         expect(res.header['x-auth']).toBeTruthy();
@@ -202,11 +202,11 @@ describe('POST /users', () => {
         expect(res.body.email).toBe(email);
       })
       .end((err) => {
-        if(err) {
+        if (err) {
           return done(err);
         }
 
-        User.findOne({email}).then((user) => {
+        User.findOne({ email }).then((user) => {
           expect(user).toBeTruthy();
           expect(user.password).not.toBe(password);
           done();
@@ -220,7 +220,7 @@ describe('POST /users', () => {
 
     request(app)
       .post('/users')
-      .send({email, password})
+      .send({ email, password })
       .expect(400)
       .end(done);
   });
@@ -230,7 +230,7 @@ describe('POST /users', () => {
 
     request(app)
       .post('/users')
-      .send({email:users[0].email, password})
+      .send({ email: users[0].email, password })
       .expect(400)
       .end(done);
   });
@@ -263,7 +263,7 @@ describe('POST /user/login', () => {
       });
   });
 
-  it ('should reject invalid login', (done) => {
+  it('should reject invalid login', (done) => {
     request(app)
       .post('/users/login')
       .send({
@@ -280,6 +280,25 @@ describe('POST /user/login', () => {
         }
 
         User.findById(users[1]._id).then((user) => {
+          expect(user.tokens.length).toBe(0);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+});
+
+describe('DELETE /users/me/token', () => {
+  it('should remove auth token on logout', (done) => {
+    request(app)
+      .delete('/users/me/token')
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.findById(users[0]._id).then((user) => {
           expect(user.tokens.length).toBe(0);
           done();
         }).catch((e) => done(e));
